@@ -1,37 +1,264 @@
-import Link from "next/link";
+"use client";
 
-export default function HomePage() {
+import * as React from "react";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "~/components/ui/breadcrumb";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import {
+  ChevronRight,
+  File,
+  FileText,
+  Folder,
+  MoreVertical,
+  Plus,
+  Upload,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { mockFiles } from "~/data/mock-files";
+import { ThemeToggle } from "~/components/theme-toggle";
+
+export default function GoogleDriveClone() {
+  const [currentFolder, setCurrentFolder] = useState<string>("root");
+  const [breadcrumbs, setBreadcrumbs] = useState<
+    { id: string; name: string }[]
+  >([{ id: "root", name: "My Drive" }]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+
+  // Get files and folders in the current directory
+  const currentItems = mockFiles.filter(
+    (item: any) => item.parentId === currentFolder,
+  );
+
+  // Handle folder navigation
+  const navigateToFolder = (folderId: string, folderName: string) => {
+    // Find the index of the folder in the current breadcrumbs
+    const existingIndex = breadcrumbs.findIndex(
+      (crumb) => crumb.id === folderId,
+    );
+
+    if (existingIndex >= 0) {
+      // If we're navigating to a folder that's already in our breadcrumb trail,
+      // trim the breadcrumbs to that point
+      setBreadcrumbs(breadcrumbs.slice(0, existingIndex + 1));
+    } else {
+      // Otherwise add the new folder to our breadcrumbs
+      setBreadcrumbs([...breadcrumbs, { id: folderId, name: folderName }]);
+    }
+
+    setCurrentFolder(folderId);
+  };
+
+  // Get file icon based on mime type
+  const getFileIcon = (mimeType?: string) => {
+    if (!mimeType) return <FileText className="h-5 w-5" />;
+
+    if (mimeType.startsWith("image/")) {
+      return <File className="h-5 w-5 text-blue-400" />;
+    } else if (mimeType.includes("spreadsheet")) {
+      return <File className="h-5 w-5 text-green-400" />;
+    } else if (mimeType.includes("document")) {
+      return <File className="h-5 w-5 text-yellow-400" />;
+    } else if (mimeType.includes("pdf")) {
+      return <File className="h-5 w-5 text-red-400" />;
+    }
+
+    return <FileText className="h-5 w-5" />;
+  };
+
+  // Mock file upload handler
+  const handleUpload = () => {
+    setUploadDialogOpen(false);
+    // In a real app, this would handle the file upload
+    alert("File upload functionality would be implemented here");
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-        </h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/usage/first-steps"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">First Steps →</h3>
-            <div className="text-lg">
-              Just the basics - Everything you need to know to set up your
-              database and authentication.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/introduction"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">Documentation →</h3>
-            <div className="text-lg">
-              Learn more about Create T3 App, the libraries it uses, and how to
-              deploy it.
-            </div>
-          </Link>
+    <div className="bg-background text-foreground min-h-screen">
+      <div className="container mx-auto p-4">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold">Google Drive Clone</h1>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Files</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="rounded-lg border-2 border-dashed p-8 text-center">
+                    <Upload className="text-muted-foreground mx-auto mb-4 h-8 w-8" />
+                    <p className="text-muted-foreground mb-2 text-sm">
+                      Drag and drop files here or click to browse
+                    </p>
+                    <Input type="file" className="hidden" id="file-upload" />
+                    <Button onClick={handleUpload}>Select Files</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Breadcrumbs */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={crumb.id}>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    onClick={() => navigateToFolder(crumb.id, crumb.name)}
+                    className="cursor-pointer"
+                  >
+                    {crumb.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {index < breadcrumbs.length - 1 && (
+                  <BreadcrumbSeparator>
+                    <ChevronRight className="h-4 w-4" />
+                  </BreadcrumbSeparator>
+                )}
+              </React.Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* New Folder Button */}
+        <div className="mb-4">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Folder
+          </Button>
+        </div>
+
+        {/* Files and Folders List */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-4 border-b p-3 font-medium">
+              <div className="w-8"></div>
+              <div>Name</div>
+              <div className="text-right">Size</div>
+              <div className="pr-2 text-right">Modified</div>
+            </div>
+
+            {currentItems.length === 0 ? (
+              <div className="text-muted-foreground p-8 text-center">
+                This folder is empty
+              </div>
+            ) : (
+              <div>
+                {/* Folders first */}
+                {currentItems
+                  .filter((item: any) => item.type === "folder")
+                  .map((folder: any) => (
+                    <div
+                      key={folder.id}
+                      className="hover:bg-muted/50 grid cursor-pointer grid-cols-[auto_1fr_auto_auto] gap-x-4 border-b p-3"
+                      onClick={() => navigateToFolder(folder.id, folder.name)}
+                    >
+                      <div className="flex items-center justify-center">
+                        <Folder className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex items-center">{folder.name}</div>
+                      <div className="text-muted-foreground text-right">—</div>
+                      <div className="text-muted-foreground pr-2 text-right">
+                        {folder.modified}
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Then files */}
+                {currentItems
+                  .filter((item: any) => item.type === "file")
+                  .map((file: any) => (
+                    <div
+                      key={file.id}
+                      className="hover:bg-muted/50 group grid grid-cols-[auto_1fr_auto_auto] gap-x-4 border-b p-3"
+                    >
+                      <div className="flex items-center justify-center">
+                        {getFileIcon(file.mimeType)}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/files/${file.id}/${encodeURIComponent(file.name)}`}
+                          className="hover:underline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Simulate opening the file
+                            window.open(`#view-file-${file.id}`, "_blank");
+                            // Alternative: Show a message
+                            alert(`Opening file: ${file.name}`);
+                          }}
+                        >
+                          {file.name}
+                        </Link>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                              onClick={(e: any) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                window.open(`#download-${file.id}`, "_blank")
+                              }
+                            >
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Share</DropdownMenuItem>
+                            <DropdownMenuItem>Rename</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="text-muted-foreground text-right">
+                        {file.size}
+                      </div>
+                      <div className="text-muted-foreground pr-2 text-right">
+                        {file.modified}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </main>
+    </div>
   );
 }
