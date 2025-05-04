@@ -47,7 +47,7 @@ export default function GoogleDriveClone() {
 
   // Get files and folders in the current directory
   const currentItems = mockFiles.filter(
-    (item: any) => item.parentId === currentFolder,
+    (item) => item.parentId === currentFolder,
   );
 
   // Handle folder navigation
@@ -176,8 +176,8 @@ export default function GoogleDriveClone() {
               <div>
                 {/* Folders first */}
                 {currentItems
-                  .filter((item: any) => item.type === "folder")
-                  .map((folder: any) => (
+                  .filter((item) => item.type === "folder")
+                  .map((folder) => (
                     <div
                       key={folder.id}
                       className="hover:bg-muted/50 grid cursor-pointer grid-cols-[auto_1fr_auto_auto] gap-x-4 border-b p-3"
@@ -196,8 +196,8 @@ export default function GoogleDriveClone() {
 
                 {/* Then files */}
                 {currentItems
-                  .filter((item: any) => item.type === "file")
-                  .map((file: any) => (
+                  .filter((item) => item.type === "file")
+                  .map((file) => (
                     <div
                       key={file.id}
                       className="hover:bg-muted/50 group grid grid-cols-[auto_1fr_auto_auto] gap-x-4 border-b p-3"
@@ -225,7 +225,7 @@ export default function GoogleDriveClone() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                              onClick={(e: any) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
